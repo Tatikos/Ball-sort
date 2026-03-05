@@ -75,3 +75,74 @@ def is_useless_move(tubes, i, j, h):
     if not dst and len(set(src)) == 1:
         return True
     return False
+
+def ida_star(tubes, h):
+    def search(tubes, g, bound, path, last_move):
+        f = g + heuristic(tubes, h)
+        if f > bound:
+            return f, None
+        if is_goal(tubes, h):
+            return -1, path[:]
+        
+        minimum = float('inf')
+        
+        moves = get_moves(tubes, h)
+        for (i, j) in moves:
+            if is_useless_move(tubes, i, j, h):
+                continue
+            # Avoid immediate reversal
+            if last_move and last_move == (j, i):
+                continue
+            
+            # Apply move
+            ball = tubes[i][-1]
+            tubes[i].pop()
+            tubes[j].append(ball)
+            path.append((i, j))
+            
+            t, result = search(tubes, g + 1, bound, path, (i, j))
+            
+            # Undo move
+            tubes[j].pop()
+            tubes[i].append(ball)
+            path.pop()
+            
+            if result is not None:
+                return -1, result
+            if t < minimum:
+                minimum = t
+        
+        return minimum, None
+    
+    bound = heuristic(tubes, h)
+    path = []
+    
+    while True:
+        t, result = search(tubes, 0, bound, path, None)
+        if result is not None:
+            return result
+        if t == float('inf'):
+            return None  # No solution
+        bound = t
+
+def main():
+    if len(sys.argv) < 2:
+        print("Usage: solver <input_file>")
+        sys.exit(1)
+    
+    filename = sys.argv[1]
+    h, n, k, tubes = read_input(filename)
+    
+    solution = ida_star(tubes, h)
+    
+    if solution is None:
+        print("No solution found")
+        return
+    
+    for (i, j) in solution:
+        src_label = chr(ord('a') + i)
+        dst_label = chr(ord('a') + j)
+        print(f"{src_label}->{dst_label}")
+
+if __name__ == "__main__":
+    main()
