@@ -23,3 +23,31 @@ def is_goal(tubes, h):
         if len(set(tube)) != 1:
             return False
     return True
+
+def heuristic(tubes, h):
+    """
+    Lower bound: count balls not in a uniform tube.
+    For each tube, count how many balls need to move out
+    (any ball that is not the same color as the bottom ball, or is in a mixed tube).
+    More precisely: for each tube, the cost is h - (length of longest same-color
+    prefix from bottom). But we need a proper admissible heuristic.
+    
+    Admissible heuristic: each "misplaced group" requires at least one move.
+    We count the number of color-contiguous groups across all tubes minus
+    the number of colors (since each color needs exactly 1 group in the end).
+    """
+    # Count contiguous groups per tube
+    total_groups = 0
+    for tube in tubes:
+        if not tube:
+            continue
+        groups = 1
+        for i in range(1, len(tube)):
+            if tube[i] != tube[i-1]:
+                groups += 1
+        total_groups += groups
+    
+    # Number of non-empty tubes
+    num_colors = len(set(b for tube in tubes for b in tube))
+    # Each color should end up as 1 group, so minimum moves >= total_groups - num_colors
+    return max(0, total_groups - num_colors)
