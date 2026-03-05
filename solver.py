@@ -51,3 +51,27 @@ def heuristic(tubes, h):
     num_colors = len(set(b for tube in tubes for b in tube))
     # Each color should end up as 1 group, so minimum moves >= total_groups - num_colors
     return max(0, total_groups - num_colors)
+
+def get_moves(tubes, h):
+    moves = []
+    for i, src in enumerate(tubes):
+        if not src:
+            continue
+        top = src[-1]
+        for j, dst in enumerate(tubes):
+            if i == j:
+                continue
+            if len(dst) >= h:
+                continue
+            # Can move if dst is empty or top of dst matches top of src
+            if not dst or dst[-1] == top:
+                moves.append((i, j))
+    return moves
+
+def is_useless_move(tubes, i, j, h):
+    """Prune: moving from a uniform tube to an empty tube is useless."""
+    src = tubes[i]
+    dst = tubes[j]
+    if not dst and len(set(src)) == 1:
+        return True
+    return False
